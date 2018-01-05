@@ -1,0 +1,239 @@
+---
+title: "ps0"
+author: "Jihye Jang"
+date: "1/4/2018"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+#set all code chunks to render in document by default
+knitr::opts_chunk$set(echo = TRUE)
+
+#load tidyverse
+require(tidyverse)
+```
+
+
+# 1 Setup
+
+stackoverflow username: 9169761   
+
+githhub id: jihyejang1377
+
+code for set up: 
+
+install.packages("devtools")
+devtools::install_github("hadley/r4ds")
+
+list.of.packages <- c("tidyverse", "rmarkdown","shiny", "RMySQL", "dbplyr", "hexbin", "statar", "readxl", "haven", "testthat", "RgoogleMaps") 
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+Everything is installed.
+
+
+#2 R for Data Science Exercises
+
+I worked with Umer Naeem.
+
+# 2.1 - 3.2.4
+
+1. Load the tidyverse library. Run ggplot(data = mpg). 
+```{r }
+
+ggplot(data = mpg)
+
+```   
+
+The "plots" section went blank (grey). because mapping and other parameter are not specified.
+
+2. How many rows are in mpg? How many columns?  
+```{r }
+
+print(mpg)
+
+```
+234 rows and 11 columns
+
+3. What does the drv variable describe? Read the help for ?mpg to find out.      
+f = front-wheel drive, r = rear wheel drive, 4 = 4wd
+
+4. Make a scatterplot of hwy vs cyl
+```{r }
+
+ggplot(data = mpg) +
+  geom_point(mapping =aes(x = hwy, y = cyl))
+
+```
+
+5. Make a scatterplot of class vs drv
+```{r }
+
+ggplot(data = mpg) +
+  geom_point(mapping =aes(x = class, y = drv))
+
+```
+
+Since two variables are categorical variables, we get distributions of observations over 3 X 7 boxes. It is not very informative since we cannot observe the distribution, density of the data. It is useful for continuous variables.
+
+# 2.2 - 3.3.1
+
+1. What has gone wrong with this code? Why are the points not blue?
+
+Here, the argument "color" should be outside the "aes".
+The right code should be:
+```{r }
+
+ggplot(data = mpg, aes(x = displ, y = hwy)) +
+  geom_point(color = "blue")
+
+```
+
+2. Which variables in mpg are categorical? Which variables are continuous? (Hint: type ?mpg to read the documentation for the dataset). When you run print(mpg), what in console output tells you which variables are categorical versus continuous?        
+
+categorical: model name, trans, drv, fl, class    
+continuous: displ, year, cyl, cty, hwy   
+```{r }
+
+print(mpg)
+
+```   
+
+the description below the names of the variables tell the type.
+
+3. Map a continuous variable to color, size, and shape. How do these aesthetics behave differently for categorical vs. continuous variables?
+```{r }
+
+ggplot(mpg, aes(x = displ, y = hwy, color = cty)) +
+  geom_point()
+
+ggplot(mpg, aes(x = displ, y = hwy, size = cty)) +
+  geom_point()
+
+```       
+
+A continuous variable cannot be mapped to shape
+
+```{r }
+
+ggplot(mpg, aes(x = displ, y = hwy, color = displ)) +
+  geom_point()
+
+ggplot(mpg, aes(x = displ, y = hwy, size = displ)) +
+  geom_point()
+
+```
+
+they work quite similarly, except that the data for categorical variable is shown over its unique values and the data for continuous variable is chunks into a few values.
+
+4. What happens if you map the same variable to multiple aesthetics?
+```{r }
+
+ggplot(mpg, aes(x = displ, y = hwy, color = drv, size = drv, shape = drv)) +
+  geom_point()
+
+```     
+
+All the aesthetics appear with warnings, but applying all three seems quite redundant
+
+5. What does the stroke aesthetic do? What shapes does it work with? (Hint: use ?geom_point or google)      
+For shapes that have a border (like 21), you can colour the inside and
+outside separately. Use the stroke aesthetic to modify the width of the
+border
+
+
+6. What happens if you map an aesthetic to something other than a variable name, like aes(colour = displ < 5)?
+```{r }
+
+ggplot(mpg, aes(x = displ, y = hwy, color = displ < 5)) +
+  geom_point() 
+
+```       
+
+data is colored over being true or false of the statement specified, thus appears in two colors
+
+# 2.3 - 3.5.1
+1. What happens if you facet on a continuous variable?      
+it does not work unless you use it with factor as following:
+facet_wrap(~ factor(continuous_variable))
+
+2. What do the empty cells in plot with facet_grid(drv ~ cyl) mean? How do they relate to this plot?
+
+```{r }
+
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = drv, y = cyl))
+
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy)) +
+facet_grid(drv ~ cyl)
+
+```
+
+It means visualising the data over drv and cyl, if drv is a n vector and cyl
+is a m vector then n x m graphs whould be shown.   
+
+As we have seen in 2.1 - 3.2.4 #5, this plot only has n x m dots and does not show the distribution, density of the data. Thus it is not very informative.
+
+3. What plots does the following code make? What does . do?
+```{r}
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy)) +
+facet_grid(drv ~ .)
+
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy)) +
+facet_grid(. ~ cyl)
+```        
+
+They show:      
+1) distribution of displ and hwy over drv
+2) distribution of displ and hwy over cyl     
+. is none, which means the data is displayed over only one variable. variable name in the left side of the ~ and . on the right side shows the variations (different panels) vertically, the opposite shows different panels horizontally
+
+4. Take the first faceted plot in this section:
+```{r}
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy)) +
+facet_wrap(~ class, nrow = 2)
+```     
+
+What are the advantages to using faceting instead of the colour aesthetic?
+What are the disadvantages?     
+
+advantage: it is more convenient to observe each individual distribution and trend as they are drawn seperately.    
+
+disadvantage: if the purpose is to analyse the data as a whole and the distribution of different sub categories within it, then comparison is less intuitive with faceting. colour aesthetic is a more suitable way. And also if the variable is continuous, this wouldn't be very useful.
+
+How might the balance change if you had a larger dataset?   
+If we had a large dataset, colour aesthetic might be visually perplexing, vague and less informative whereas faceting shows individual trends which can be relatively clear and accurate with large observations
+
+5. Read ?facet_wrap. What does nrow do? What does ncol do? What other options control the layout of the individual panels?    
+
+nrow, ncol indicate the number of rows and columns.     
+
+facets, as.table, dir.       
+
+facets control faceting or not, as.table controls the layout of tables (bottom-right vs top-right), dir controls whether the layout is horizontal or vertical.
+
+Why doesn???t facet_grid() have nrow and ncol argument?
+because it depends on the the numbers of values inherent for the variables.
+
+6. When using facet_grid() you should usually put the variable with more unique levels in the columns.
+Why?
+```{r}
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy)) +
+facet_grid( . ~ hwy )
+
+ggplot(data = mpg) +
+geom_point(mapping = aes(x = displ, y = hwy)) +
+facet_grid( hwy ~ . )
+```     
+
+As is shown in two graphs, 
+it is because if we put that variable in row, the distribution of y and x over that variable is too dispersed as the space is not limited horizontally, thus it is hard to make useful inferences. On the other hand, when the variable with more unique levels are in column, the interval is made so small such that distributions of y and x are condensed into a dot-like shape. The trend of the distribution of y and x over the variable is more clear and smooth like a linear function.
+
+
